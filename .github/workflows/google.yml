@@ -43,10 +43,11 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
-    - name: Docker Build and Test Dev Version
-      run: |-
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/img_test client/ -f client/Dockerfile.dev
-        docker run -e CI=true ${{ secrets.DOCKERHUB_USERNAME }}/img_test npm test
+    # TEST IMAGE 
+    #- name: Docker Build and Test Dev Version
+    #  run: |-
+    #    docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/img_test client/ -f client/Dockerfile.dev
+    #    docker run -e CI=true ${{ secrets.DOCKERHUB_USERNAME }}/img_test npm test
 
     - name: Login to DockerHub
       uses: docker/login-action@v1
@@ -87,4 +88,4 @@ jobs:
     # Deploy the Docker image to the GKE cluster
     - name: Deploy
       run: |-
-        kubectl set image ${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
+        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
