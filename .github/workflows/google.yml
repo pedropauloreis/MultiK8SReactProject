@@ -58,34 +58,28 @@ jobs:
 
 
     # Setup gcloud CLI
-    - uses: google-github-actions/setup-gcloud@v0.2.0
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v0.2.0
       with:
         service_account_key: ${{ secrets.GKE_SA_KEY }}
         project_id: ${{ secrets.GKE_PROJECT }}
 
-    # Configure Docker to use the gcloud command-line tool as a credential
-    # helper for authentication
-    - run: |-
-        gcloud --quiet auth configure-docker
-
-    # Get the GKE credentials so we can deploy to the cluster
-    - uses: google-github-actions/get-gke-credentials@v0.2.1
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_ZONE }}
-        credentials: ${{ secrets.GKE_SA_KEY }}
-
-
-    # Set up kustomize
-    - name: Set up Kustomize
+    # Update gcloud kubectl
+    - name: Update gcloud with kubernetes
       run: |-
-        curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
-        chmod u+x ./kustomize
+        gcloud components update kubectl
+
+    # Set compute /zone gcloud kubectl
+    - name: Set glcoud compute/zone
+      run: |-
+        gcloud config set compute/zone ${{ env.GKE_ZONE }}
+
+    # Get gcloud credentials
+    - name: Set glcoud credentials
+      run: |-
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }}
 
     # Deploy the Docker image to the GKE cluster
     - name: Deploy
       run: |-
-        ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG= ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
-        ./kustomize build . | kubectl apply -f -
-        kubectl rollout status deployment/$DEPLOYMENT_NAME
-        kubectl get services -o wide
+        kubectl apply -f infra/k8s/client-depl.yaml
