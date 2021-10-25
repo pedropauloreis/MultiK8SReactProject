@@ -54,7 +54,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE:$GITHUB_SHA
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
 
 
     # Setup gcloud CLI
@@ -85,7 +85,7 @@ jobs:
     # Deploy the Docker image to the GKE cluster
     - name: Deploy
       run: |-
-        ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE:$GITHUB_SHA
+        ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG= ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
         ./kustomize build . | kubectl apply -f -
         kubectl rollout status deployment/$DEPLOYMENT_NAME
         kubectl get services -o wide
