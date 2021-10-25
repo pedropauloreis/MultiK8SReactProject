@@ -26,7 +26,7 @@ env:
   GKE_ZONE: europe-central2-a   # TODO: update to cluster zone
   DEPLOYMENT_NAME: api-deployment # TODO: update to deployment name
   IMAGE: multi-k8s-react-api
-  DEPLOYMENT_FILE: infra/k8s/apli-depl.yaml
+  DEPLOYMENT_FILE: infra/k8s/api-depl.yaml
   
 jobs:
   setup-build-publish-deploy:
