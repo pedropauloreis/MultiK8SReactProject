@@ -1,0 +1,99 @@
+# This workflow will build a docker container, publish it to Google Container Registry, and deploy it to GKE when there is a push to the master branch.
+#
+# To configure this workflow:
+#
+# 1. Ensure that your repository contains the necessary configuration for your Google Kubernetes Engine cluster, including deployment.yml, kustomization.yml, service.yml, etc.
+#
+# 2. Set up secrets in your workspace: GKE_PROJECT with the name of the project and GKE_SA_KEY with the Base64 encoded JSON service account key (https://github.com/GoogleCloudPlatform/github-actions/tree/docs/service-account-key/setup-gcloud#inputs).
+#
+# 3. Change the values for the GKE_ZONE, GKE_CLUSTER, IMAGE, and DEPLOYMENT_NAME environment variables (below).
+#
+# For more support on how to run the workflow, please visit https://github.com/google-github-actions/setup-gcloud/tree/master/example-workflows/gke
+
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'worker/**'
+
+      
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: multi-cluster    # TODO: update to cluster name
+  GKE_ZONE: europe-central2-a   # TODO: update to cluster zone
+  DEPLOYMENT_NAME: worker-deployment # TODO: update to deployment name
+  IMAGE: multi-k8s-react-worker
+  DEPLOYMENT_FILE: infra/k8s/workers-depl.yaml
+  
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Declare some variables
+      id: vars
+      shell: bash
+      run: |
+        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    # TEST IMAGE 
+    #- name: Docker Build and Test Dev Version
+    #  run: |-
+    #    docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/img_test client/ -f client/Dockerfile.dev
+    #    docker run -e CI=true ${{ secrets.DOCKERHUB_USERNAME }}/img_test npm test
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        context: client/
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{ steps.vars.outputs.sha_short }},${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:latest
+
+
+    # Setup gcloud CLI
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v0.2.0
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ secrets.GKE_PROJECT }}
+
+    # Update gcloud kubectl
+    #- name: Update gcloud with kubernetes
+    #  run: |-
+    #    gcloud components update kubectl
+
+    # Set compute /zone gcloud kubectl
+    - name: Set glcoud compute/zone
+      run: |-
+        gcloud config set compute/zone ${{ env.GKE_ZONE }}
+
+    # Get gcloud credentials
+    - name: Set glcoud credentials
+      run: |-
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }}
+
+    # Deploy the Docker image to the GKE cluster
+    - name: Create/Update Deployment on Google Cloud
+      run: |-
+        kubectl apply -f ${{ env.DEPLOYMENT_FILE }}
+        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{ steps.vars.outputs.sha_short }}
