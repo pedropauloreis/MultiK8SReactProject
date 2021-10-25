@@ -34,6 +34,12 @@ jobs:
     environment: production
 
     steps:
+    - name: Declare some variables
+      id: vars
+      shell: bash
+      run: |
+        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
     - name: Checkout
       uses: actions/checkout@v2
 
@@ -60,7 +66,7 @@ jobs:
       with:
         context: client/
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{ steps.vars.outputs.sha_short }},${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:latest
 
 
     # Setup gcloud CLI
@@ -71,9 +77,9 @@ jobs:
         project_id: ${{ secrets.GKE_PROJECT }}
 
     # Update gcloud kubectl
-    - name: Update gcloud with kubernetes
-      run: |-
-        gcloud components update kubectl
+    #- name: Update gcloud with kubernetes
+    #  run: |-
+    #    gcloud components update kubectl
 
     # Set compute /zone gcloud kubectl
     - name: Set glcoud compute/zone
@@ -86,6 +92,6 @@ jobs:
         gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }}
 
     # Deploy the Docker image to the GKE cluster
-    - name: Deploy
+    - name: Update Deployment on Google Cloud
       run: |-
-        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
+        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{ steps.vars.outputs.sha_short }}
