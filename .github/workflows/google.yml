@@ -45,7 +45,7 @@ jobs:
 
     - name: Docker Build and Test Dev Version
       run: |-
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/img_test -f /client/Dockerfile.dev
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/img_test -f /client/Dockerfile.dev client/
         docker run -e CI=true ${{ secrets.DOCKERHUB_USERNAME }}/img_test npm test
 
     - name: Login to DockerHub
