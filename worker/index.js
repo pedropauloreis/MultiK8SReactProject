@@ -17,7 +17,7 @@ function fib(index) {
 }
 
 sub.on('message', (channel, message) => {
-    console.log(`Incoming value in Worker service: ${message} - Fibonacci: ${fib(parseInt(message))}`)
+    console.log(`Incoming value in Worker service: ${message} - Fibonacci: ${fib(parseInt(message))}!`)
     redisClient.hset('values', message, fib(parseInt(message)));
 });
 sub.subscribe('insert',()=> {console.log('Listening insert actions.')});
