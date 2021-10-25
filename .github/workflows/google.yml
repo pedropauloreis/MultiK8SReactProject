@@ -24,7 +24,7 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_CLUSTER: multi-cluster    # TODO: update to cluster name
   GKE_ZONE: europe-central2-a   # TODO: update to cluster zone
-  DEPLOYMENT_NAME: multi-cluster-client # TODO: update to deployment name
+  DEPLOYMENT_NAME: client-deployment # TODO: update to deployment name
   IMAGE: multi-k8s-react-client
   
 jobs:
@@ -42,7 +42,16 @@ jobs:
     
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
+
+    - name: Docker Build Dev Version
+      run: |-
+        docker build -t  ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }} ./client/Dockerfile.dev
     
+    - name: Docker Build and Test Dev Version
+      run: |-
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/img_test ./client/Dockerfile.dev
+        docker run -e CI=true ${{ secrets.DOCKERHUB_USERNAME }}/img_test npm test
+
     - name: Login to DockerHub
       uses: docker/login-action@v1
       with:
@@ -82,4 +91,4 @@ jobs:
     # Deploy the Docker image to the GKE cluster
     - name: Deploy
       run: |-
-        kubectl apply -f infra/k8s/client-depl.yaml
+        kubectl set image ${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{github.run_id}}
