@@ -27,7 +27,6 @@ env:
   DEPLOYMENT_NAME: worker-deployment # TODO: update to deployment name
   IMAGE: multi-k8s-react-worker
   DEPLOYMENT_FILE: infra/k8s/worker-depl.yaml
-  DOCKER_CONTEXT: worker
   
 jobs:
   setup-build-publish-deploy:
