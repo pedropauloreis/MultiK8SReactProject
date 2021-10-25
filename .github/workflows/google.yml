@@ -26,6 +26,7 @@ env:
   GKE_ZONE: europe-central2-a   # TODO: update to cluster zone
   DEPLOYMENT_NAME: client-deployment # TODO: update to deployment name
   IMAGE: multi-k8s-react-client
+  DEPLOYMENT_FILE: infra/k8s/client-depl.yaml
   
 jobs:
   setup-build-publish-deploy:
@@ -92,6 +93,7 @@ jobs:
         gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }}
 
     # Deploy the Docker image to the GKE cluster
-    - name: Update Deployment on Google Cloud
+    - name: Create/Update Deployment on Google Cloud
       run: |-
+        kubectl apply -f ${{ env.DEPLOYMENT_FILE }}
         kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{ steps.vars.outputs.sha_short }}
