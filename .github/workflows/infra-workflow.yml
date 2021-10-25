@@ -26,8 +26,8 @@ env:
   GKE_ZONE: europe-central2-a   # TODO: update to cluster zone
   
 jobs:
-  setup-build-publish-deploy:
-    name: Setup, Build, Publish, and Deploy
+  setup-deploy:
+    name: Setup and Update Deployment
     runs-on: ubuntu-latest
     environment: production
 
@@ -58,4 +58,3 @@ jobs:
     - name: Update Deployments on Google Cloud
       run: |-
         kubectl apply -f infra/k8s/
-        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} client=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE }}:${{ steps.vars.outputs.sha_short }}
