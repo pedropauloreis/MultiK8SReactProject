@@ -10,7 +10,7 @@
 #
 # For more support on how to run the workflow, please visit https://github.com/google-github-actions/setup-gcloud/tree/master/example-workflows/gke
 
-name: Build and Deploy to GKE
+name: Worker - Build and Deploy to GKE
 
 on:
   push:
@@ -26,7 +26,7 @@ env:
   GKE_ZONE: europe-central2-a   # TODO: update to cluster zone
   DEPLOYMENT_NAME: worker-deployment # TODO: update to deployment name
   IMAGE: multi-k8s-react-worker
-  DEPLOYMENT_FILE: infra/k8s/workers-depl.yaml
+  DEPLOYMENT_FILE: infra/k8s/worker-depl.yaml
   
 jobs:
   setup-build-publish-deploy:
