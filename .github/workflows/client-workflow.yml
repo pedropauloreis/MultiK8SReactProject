@@ -34,7 +34,7 @@ jobs:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
     environment: production
-    DOCKER_CONTEXT: client/
+    DOCKER_CONTEXT: client
 
     steps:
     - name: Checkout

@@ -27,7 +27,7 @@ env:
   DEPLOYMENT_NAME: api-deployment # TODO: update to deployment name
   IMAGE: multi-k8s-react-api
   DEPLOYMENT_FILE: infra/k8s/api-depl.yaml
-  DOCKER_CONTEXT: api/
+  DOCKER_CONTEXT: api
   
 jobs:
   setup-build-publish-deploy:
